@@ -47,29 +47,29 @@ public:
     }
     Node<T, E> *LeftRotation(Node<T, E> *node)
     {
-        Node<T, E> *y = node->right;
-        Node<T, E> *x = y->left;
-        y->left = node;
-        node->right = x;
-        // y->parent = node->parent;
-        node->parent = y;
-        if (x != nullptr)
+        Node<T, E> *Node_Er_Left = node->left;
+        Node<T, E> *Node_Er_Right = node->right;
+        Node<T, E> *Node_Er_Right_Er_Left = Node_Er_Right->left;
+        Node_Er_Right->left = node;
+        node->right = Node_Er_Right_Er_Left;
+        node->parent = Node_Er_Right;
+        if (Node_Er_Right_Er_Left != nullptr)
         {
-            x->parent = node;
+            Node_Er_Right_Er_Left->parent = node;
         }
-        return y;
+        return Node_Er_Right;
     }
     Node<T, E> *RightRotation(Node<T, E> *node)
     {
-        Node<T, E> *y = node->left; // node er left
-        Node<T, E> *x = y->right;   // node er left er right
-        y->right = node;            //
-        node->left = x;
-        // y->parent = node->parent;
-        node->parent = y;
-        if (x != nullptr)
+        Node<T, E> *Node_Er_Left = node->left;
+        Node<T, E> *Node_Er_Right = node->right;
+        Node<T, E> *Node_Er_Left_Er_Right = Node_Er_Left->right;
+        Node_Er_Left->right = node;
+        node->left = Node_Er_Left_Er_Right;
+        node->parent = Node_Er_Left;
+        if (Node_Er_Left_Er_Right != nullptr)
         {
-            x->parent = node;
+            Node_Er_Left_Er_Right->parent = node;
         }
         return y;
     }
@@ -202,9 +202,9 @@ public:
             this->rootRBT->colour = BLACK;
             this->size++;
         }
-        else if(FindHelper(this->rootRBT, key))
+        else if (FindHelper(this->rootRBT, key))
         {
-            Find_Replace(rootRBT,key,value);
+            Find_Replace(rootRBT, key, value);
         }
         else
         {
@@ -260,24 +260,24 @@ public:
             return FindHelper(root->left, key);
         }
     }
-    void Find_Replace(Node<T, E> *root,T key,E value)
+    void Find_Replace(Node<T, E> *root, T key, E value)
     {
-         if (root == nullptr)
+        if (root == nullptr)
         {
-            return ;
+            return;
         }
         else if (root->key == key)
         {
-           root->value=value;
+            root->value = value;
         }
 
         else if (root->key < key)
         {
-             Find_Replace(root->right, key,value);
+            Find_Replace(root->right, key, value);
         }
         else if (root->key > key)
         {
-             Find_Replace(root->left, key,value);
+            Find_Replace(root->left, key, value);
         }
     }
     void Find(T key)
