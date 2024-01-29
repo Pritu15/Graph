@@ -16,6 +16,12 @@ public:
     int colour = RED;
     Node()
     {
+        //  this->key = key;
+        // this->value = value;
+        this->right=nullptr;
+        this->left=nullptr;
+        this->colour=BLACK;
+
     }
     Node(T key, E value)
     {
@@ -25,6 +31,55 @@ public:
     void PrintNode()
     {
         cout << key << " " << colour << endl;
+    }
+    Node<T, E> *sibling()
+    {
+        if (this->parent == nullptr)
+        {
+            return nullptr;
+        }
+
+        else if (this == this->parent->left)
+        {
+            return this->parent->right;
+        }
+        else if (this == this->parent->right)
+        {
+            return this->parent->left;
+        }
+    }
+    bool isLeftChild()
+    {
+        if (this == this->parent->left)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    Node<T, E> *LeftChild()
+    {
+        if (this->left == nullptr)
+        {
+            return nullptr;
+        }
+        else
+        {
+            return this->left;
+        }
+    }
+    Node<T, E> *RightChild()
+    {
+        if (this->right == nullptr)
+        {
+            return nullptr;
+        }
+        else
+        {
+            return this->right;
+        }
     }
 };
 
@@ -38,11 +93,13 @@ class RBT
     bool RightRightCase = false;
     bool LeftRightCase = false;
     bool LeftLeftCase = false;
+    Node<T, E> *NIL=new Node<T,E>();
 
 public:
     RBT()
     {
         this->rootRBT = nullptr;
+        //cout<<NIL->colour<<endl;
         this->size = 0;
     }
     Node<T, E> *LeftRotation(Node<T, E> *node)
@@ -71,7 +128,7 @@ public:
         {
             Node_Er_Left_Er_Right->parent = node;
         }
-        return y;
+        return Node_Er_Left;
     }
     Node<T, E> *INSERTHELPER(E value, T key, Node<T, E> *root)
     {
@@ -228,7 +285,7 @@ public:
             return;
         }
 
-        cout << root->key << "_" << root->value;
+        cout << root->key << "_" << root->colour;
 
         if (root->left != nullptr || root->right != nullptr)
         {
@@ -260,6 +317,31 @@ public:
             return FindHelper(root->left, key);
         }
     }
+    Node<T, E> *SearchNode(Node<T, E> *root, T key)
+    {
+        if (root == nullptr)
+        {
+            return nullptr;
+        }
+        else if (root->key == key)
+        {
+            return root;
+        }
+
+        else if (root->key < key)
+        {
+            SearchNode(root->right, key);
+        }
+        else if (root->key > key)
+        {
+            SearchNode(root->left, key);
+        }
+    }
+    Node<T, E> *Search(T key)
+    {
+        return SearchNode(this->rootRBT, key);
+    }
+
     void Find_Replace(Node<T, E> *root, T key, E value)
     {
         if (root == nullptr)
@@ -278,6 +360,291 @@ public:
         else if (root->key > key)
         {
             Find_Replace(root->left, key, value);
+        }
+    }
+    Node<T, E> *InorderSuccessor(Node<T, E> *root)
+    {
+        Node<T, E> *successor = root;
+        while (root->left != nullptr)
+        {
+            successor = successor->left;
+        }
+        return successor;
+    }
+    Node<T, E> *Replace(Node<T, E> *root)
+    {
+        if (root->left != nullptr && root->right != nullptr)
+        {
+            return InorderSuccessor(root->right);
+        }
+        else if (root->left == nullptr && root->right == nullptr)
+        {
+            return nullptr;
+        }
+        else if (root->left == nullptr && root->right != nullptr)
+        {
+            return root->right;
+        }
+        else if (root->left != nullptr && root->right == nullptr)
+        {
+            return root->left;
+        }
+    }
+    void transplant(Node<T, E> *u, Node<T, E> *v)
+    {
+        if (u->parent == nullptr)
+        {
+            this->rootRBT = v;
+        }
+        else if (u == u->parent->left)
+        {
+            
+            u->parent->left = v;
+            cout<<"transplant u=u->parent->left"<<endl;
+        }
+        else
+        {
+            u->parent->right = v;
+        }
+       if (v != nullptr)
+    {
+        v->parent = u->parent;
+    }
+        cout<<"v->parent = u->parent"<<endl;
+    }
+    void Erase(T key)
+    {
+        Node<T, E> *Z = Search(key);
+        //cout<<Z->value<<endl;
+        Node<T, E> *X;
+        if (Z == nullptr)
+        {
+            return;
+        }
+        Node<T, E> *Y = Z;
+        int Y_Original_Color = Y->colour;
+        if (Z->left == nullptr)
+        {
+            cout<<"Erase left NULL"<<endl;
+            X = Z->right;
+            transplant(Z, Z->right);
+        }
+        else if (Z->right == nullptr)
+        {
+            cout<<"Erase right NULL"<<endl;
+            X = Z->left;
+            transplant(Z, Z->left);
+        }
+        else
+        {
+            cout<<"No child NULL"<<endl;
+            Y = InorderSuccessor(Z->right);
+            Y_Original_Color = Y->colour;
+            X = Y->right;
+            if (Y->parent == Z)
+            {
+                X->parent = Y;
+            }
+            else
+            {
+                transplant(Y, Y->right);
+                Y->right = Z->right;
+                Y->right->parent = Y;
+            }
+
+            transplant(Z, Y);
+            Y->left = Z->left;
+            Y->left->parent = Y;
+            Y->colour = Z->colour;
+        }
+        delete Z;
+        if (Y_Original_Color == BLACK)
+        {
+            cout<<"Y_Original_Color == BLACK"<<endl;
+            FixRbt(X);
+        }
+    }
+    bool check(Node<T,E> * X)
+    {
+        if(X==nullptr)
+        {
+            return true;
+        }
+        else if(X != rootRBT && (X->colour == BLACK||X==nullptr))
+        {
+            return true;
+        }
+        return false;
+    }
+    void FixRbt(Node<T, E> *X)
+    {
+        Node<T, E> *W;
+        cout<<"Outside while loop FixRBT"<<endl;
+        while (check(X))
+        {
+            cout << "Fix_RBt" << endl;
+            if (X->parent->left == X)
+            {
+                W = X->parent->right;
+                if (W->colour == RED)
+                {
+                    W->colour = BLACK;
+                    X->parent->colour = RED;
+                    LeftRotation(X->parent);
+                    W = X->parent->right;
+                }
+                if (W->left->colour == BLACK && W->right->colour == BLACK)
+                {
+                    W->colour = RED;
+                    X = X->parent;
+                }
+                else
+                {
+                    if (W->right->colour == BLACK)
+                    {
+                        W->left->colour = BLACK;
+                        W->colour = RED;
+                        RightRotation(W);
+                        W = X->parent->right;
+                    }
+                    W->colour = X->parent->colour;
+                    X->parent->colour = BLACK;
+                    W->right->colour = BLACK;
+                    LeftRotation(X);
+                    X = this->rootRBT;
+                }
+            }
+            else
+            {
+                W = X->parent->left;
+                if (W->colour == RED)
+                {
+                    W->colour = BLACK;
+                    X->parent->colour = RED;
+                    RightRotation(X->parent);
+                    W = X->parent->left;
+                }
+                if ((W->right->colour == BLACK || W->right == nullptr) && (W->left->colour == BLACK || W->left == nullptr))
+                {
+                    W->colour = RED;
+                    X = X->parent;
+                }
+                else
+                {
+                    if (W->left->colour == BLACK)
+                    {
+                        W->right->colour = BLACK;
+                        W->colour = RED;
+                        LeftRotation(W);
+                        W = X->parent->left;
+                    }
+                    W->colour = X->parent->colour;
+                    X->parent->colour = BLACK;
+                    W->left->colour = BLACK;
+                    RightRotation(X);
+                    X = this->rootRBT;
+                }
+            }
+        }
+        if (X == rootRBT && X->colour == RED)
+        {
+            X->colour = BLACK;
+        }
+    }
+    void DeleteNode(Node<T, E> *node_to_be_deleted)
+    {
+        Node<T, E> *node_to_be_replaced = Replace(node_to_be_deleted);
+        if (node_to_be_replaced == nullptr)
+        {
+            if (node_to_be_deleted == this->rootRBT)
+            {
+                delete node_to_be_deleted;
+                return;
+            }
+            else if (node_to_be_deleted->colour == RED)
+            {
+                delete node_to_be_deleted;
+                return;
+            }
+            else if (node_to_be_deleted->colour == BLACK)
+            {
+                if (node_to_be_deleted->sibling()->colour == BLACK || node_to_be_deleted->sibling() == nullptr)
+                {
+                    if ((node_to_be_deleted->sibling()->LeftChild()->colour == BLACK || node_to_be_deleted->sibling()->LeftChild() == nullptr) && (node_to_be_deleted->sibling()->RightChild()->colour == BLACK || node_to_be_deleted->sibling()->RightChild() == nullptr))
+                    {
+                        if (node_to_be_deleted->parent->colour == RED)
+                        {
+                            node_to_be_deleted->parent->colour = BLACK;
+                            node_to_be_deleted->sibling()->colour == RED;
+                            delete node_to_be_deleted;
+                            return;
+                        }
+                        else if (node_to_be_deleted->parent->colour == BLACK)
+                        {
+                            fixDoubleBlack(node_to_be_deleted);
+                        }
+                    }
+                }
+            }
+        }
+        if (node_to_be_replaced->colour == RED)
+        {
+            node_to_be_deleted->value = node_to_be_replaced->value;
+            Delete(node_to_be_replaced);
+        }
+    }
+    bool bothChildBlack(Node<T, E> *root)
+    {
+        if ((root->sibling()->LeftChild()->colour == BLACK ||
+             root->sibling()->LeftChild() == nullptr) &&
+            (root->sibling()->RightChild()->colour == BLACK ||
+             root->sibling()->RightChild() == nullptr))
+        {
+            return true;
+        }
+        return false;
+    }
+    void fixDoubleBlack(Node<T, E> *root)
+    {
+        if (root == this->rootRBT)
+        {
+            return;
+        }
+        if (root->sibling() == nullptr)
+        {
+            fixDoubleBlack(root);
+        }
+        else
+        {
+            if (root->sibling()->colour == BLACK)
+            {
+                if (bothChildBlack(root->sibling()))
+                {
+                    root->sibling() = BLACK;
+                    if (root->parent->colour == BLACK)
+                    {
+                        fixDoubleBlack(root->parent);
+                    }
+                    else
+                    {
+                        root->parent->colour = BLACK;
+                    }
+                }
+            }
+        }
+    }
+
+    void Delete(T key)
+    {
+        if (this->rootRBT == nullptr)
+        {
+            return;
+        }
+        Node<T, E> *node_to_be_deleted = Search(rootRBT, key);
+        Node<T, E> *u;
+        if (node_to_be_deleted == nullptr)
+        {
+            return;
         }
     }
     void Find(T key)
@@ -350,6 +717,10 @@ int main()
     // R.Print();
     R.Find(200);
     R.Iteration();
+    int data;
+    // cin >> data;
+    R.Erase(12);
+    R.Print();
 
     // fclose(stdin);
     // fclose(stdout);
