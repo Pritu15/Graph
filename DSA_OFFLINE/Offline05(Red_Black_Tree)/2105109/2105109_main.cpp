@@ -21,7 +21,7 @@ int main()
             keyStore.push_back(key);
             cout << "Cmd " << i++ << ": I " << key << " " << value << endl;
             m.insert(key, value);
-            cout << endl;
+            // cout << endl;
         }
         else if (type == "E")
         {
@@ -62,6 +62,8 @@ int main()
             // cout << "unsuccessful" << endl;
             m.clear();
         }
+        cout << endl;
+        cout << endl;
     }
     fclose(stdin);
     fclose(stdout);
