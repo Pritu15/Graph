@@ -11,7 +11,7 @@ int main()
     string value;
     vector<int> keyStore;
     freopen("input.txt", "r", stdin);
-    freopen("output.txt", "w", stdout);
+   // freopen("output.txt", "w", stdout);
     while (cin >> type)
     {
         if (type == "I")

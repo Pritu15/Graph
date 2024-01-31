@@ -122,7 +122,7 @@ class RBT
 
     Node<T, E> *LeftRotation(Node<T, E> *node)
     {
-        Node<T, E> *Node_Er_Left = node->left;
+        //Node<T, E> *Node_Er_Left = node->left;
         Node<T, E> *Node_Er_Right = node->right;
         Node<T, E> *Node_Er_Right_Er_Left = Node_Er_Right->left;
         Node_Er_Right->left = node;
@@ -407,7 +407,6 @@ class RBT
         {
 
             u->parent->left = v;
-            // cout << "transplant u=u->parent->left" << endl;
         }
         else
         {
@@ -620,7 +619,7 @@ public:
             Y->colour = Z->colour;
             //Print();
         }
-        // delete Z;
+         delete Z;
         // cout<<"Before Delete"<<endl;
         //  Print();
         if (Y_Original_Color == BLACK)
