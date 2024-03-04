@@ -18,7 +18,7 @@ void Initialize(vector<vector<int>> &dis, int n)
         }
     }
 }
-void FloydWarshall(vector<vector<int>> &dis, int n)
+void  FloydWarshall(vector<vector<int>> &dis, int n)
 {
 
     for (int k = 1; k <= n; k++)

@@ -27,7 +27,7 @@ public:
         this->right = nullptr;
     }
 };
-Node<int, int> *valueKey[100000];
+
 template <typename T, typename E>
 class FibonacciHeap
 {
@@ -36,12 +36,14 @@ public:
     Node<T, E> *max;
     Node<T, E> *rootList;
     int noOfTrees;
+    int noOfNodes;
 
     FibonacciHeap()
     {
         this->max = nullptr;
         this->rootList = nullptr;
         this->noOfTrees = 0;
+        this->noOfNodes = 0;
     }
     int getN()
     {
@@ -64,6 +66,7 @@ template <typename T, typename E>
 class PriorityQueue
 {
     int size;
+    Node<T, E> *valueKey[100000];
 
 public:
     FibonacciHeap<T, E> *make_Heap()
@@ -83,13 +86,21 @@ public:
         {
             H->max = node;
         }
+        H->noOfNodes += 1;
     }
     FibonacciHeap<T, E> *meld(FibonacciHeap<T, E> *H1, FibonacciHeap<T, E> *H2)
     {
-
         FibonacciHeap<T, E> *H = make_Heap();
-        H->rootList = H1->rootList;
-        if (H1->max->key > H2->max->key)
+        if (H1->max == nullptr && H2->max == nullptr)
+        {
+            return H;
+        }
+
+        if (H1->max != nullptr && H2->max != nullptr)
+        {
+            H->max = H1->max->key > H2->max->key ? H1->max : H2->max;
+        }
+        else if (H1->max != nullptr)
         {
             H->max = H1->max;
         }
@@ -97,14 +108,32 @@ public:
         {
             H->max = H2->max;
         }
-        Node<T, E> *End = H2->rootList->left;
-        H2->rootList->left = H->rootList->left;
-        H->rootList->left->right = H2->rootList;
-        H->rootList->left = End;
-        H2->rootList->left->right = H->rootList;
+
+        if (H1->rootList != nullptr && H2->rootList != nullptr)
+        {
+            H->rootList = H1->rootList;
+            Node<T, E> *H1End = H1->rootList->left;
+            Node<T, E> *H2End = H2->rootList->left;
+
+            H1End->right = H2->rootList;
+            H2->rootList->left = H1End;
+
+            H2End->right = H->rootList;
+            H->rootList->left = H2End;
+        }
+        else if (H1->rootList != nullptr)
+        {
+            H->rootList = H1->rootList;
+        }
+        else
+        {
+            H->rootList = H2->rootList;
+        }
+
         H->noOfTrees = H1->noOfTrees + H2->noOfTrees;
         return H;
     }
+
     void Extract_max(FibonacciHeap<T, E> *H)
     {
         // Print(H);
@@ -143,24 +172,9 @@ public:
             }
         }
         // H->noOfTrees--;
+        H->noOfNodes -= 1;
     }
-    void mergeWithRootList(FibonacciHeap<T, E> *H, Node<T, E> *node)
-    {
-        if (H->rootList == nullptr)
-        {
-            H->rootList = node;
-        }
-        else
-        {
 
-            node->right = H->rootList;
-            node->left = H->rootList->left;
-            H->rootList->left->right = node;
-            H->rootList->left = node;
-        }
-        valueKey[node->value] = node;
-        H->noOfTrees += 1;
-    }
     void removeFromRootList(FibonacciHeap<T, E> *H, Node<T, E> *node)
     {
         if (node == H->rootList)
@@ -292,16 +306,22 @@ public:
     }
     void Increase_key(FibonacciHeap<T, E> *H, E value, T newKey)
     {
-        //Node<T, E> *x = Search(H->rootList, value);
+        // Node<T, E> *x = Search(H->rootList, value);
         Node<T, E> *x = valueKey[value];
+        // cout<<x->key<<endl;
         if (x == nullptr || (newKey < x->key))
         {
+            cout << value << " not found" << endl;
             return;
         }
         Node<T, E> *y = x->Parent;
+        // cout << x->key << endl;
+        //  cout<<y->key<<endl;
         x->key = newKey;
         if (y != nullptr && x->key > y->key)
         {
+            //cout << x->key << endl;
+            //cout << y->mark << endl;
             CUT(H, x, y);
             CASCADING_CUT(H, y);
         }
@@ -309,6 +329,7 @@ public:
         {
             H->max = x;
         }
+        H->noOfNodes -= 1;
     }
     void CUT(FibonacciHeap<T, E> *H, Node<T, E> *x, Node<T, E> *y)
     {
@@ -317,18 +338,38 @@ public:
         mergeWithRootList(H, x);
         x->Parent = nullptr;
         x->mark = false;
+        // Print(H);
+    }
+    void mergeWithRootList(FibonacciHeap<T, E> *H, Node<T, E> *node)
+    {
+        if (H->rootList == nullptr)
+        {
+            H->rootList = node;
+        }
+        else
+        {
+
+            node->right = H->rootList;
+            node->left = H->rootList->left;
+            H->rootList->left->right = node;
+            H->rootList->left = node;
+        }
+        valueKey[node->value] = node;
+        H->noOfTrees += 1;
     }
     void CASCADING_CUT(FibonacciHeap<T, E> *H, Node<T, E> *x)
     {
         Node<T, E> *temp = x->Parent;
         if (temp != nullptr)
         {
-            if (!temp)
+            if (!(x->mark))
             {
                 x->mark = true;
+                // cout << "Marked" << endl;
             }
             else
             {
+                //cout << "Marked" << endl;
                 CUT(H, x, temp);
                 CASCADING_CUT(H, temp);
             }
@@ -336,16 +377,23 @@ public:
     }
     void removeFromChildList(Node<T, E> *parent, Node<T, E> *node)
     {
-        if (parent->Child == parent->Child->right)
+        if (node == node->right)
         {
             parent->Child = nullptr;
         }
-        else if (parent->Child == node)
+        node->left->right = node->right;
+        node->right->left = node->left;
+        // if (parent->Child == parent->Child->right)
+        // {
+        //     parent->Child = nullptr;
+
+        // }
+        if (parent->Child == node)
         {
             parent->Child = node->right;
-            node->right->Parent = parent;
-            node->left->right = node->right;
-            node->right->left = node->left;
+            // node->right->Parent = parent;
+            // node->left->right = node->right;
+            // node->right->left = node->left;
         }
     }
 
@@ -397,7 +445,7 @@ public:
             //
             if (temp->Child != nullptr)
             {
-                cout << "(" << temp->key << "," << temp->value << ")-> ";
+                cout << "      (" << temp->key << "," << temp->value << ")-> ";
             }
 
             RecursivePrint(temp->Child, temp->degree);
@@ -432,36 +480,102 @@ public:
             // valueKey[10];
         }
     }
+    void test()
+    {
+
+        FibonacciHeap<int, int> *H1 = make_Heap();
+        FibonacciHeap<int, int> *H2 = make_Heap();
+        int n;
+        // cin >> n;
+
+        for (int i = 1; i <= 10; i++)
+        {
+            // int key, value;
+            //  cin >> key >> value;
+            insert(H1, i, i);
+        }
+        // for (int i = 21; i <= 40; i++)
+        // {
+        //     Q.insert(H2, i, i);
+        // }
+        Print(H1);
+        // Q.PrintRootList(H1);
+        cout << "First Extract_max" << endl;
+        Extract_max(H1);
+        Print(H1);
+        cout << "Extract Max without Child" << endl;
+        // Q.Increase_key(H1,8,20);
+        Extract_max(H1);
+        Print(H1);
+        cout << "Extracting which have 3 children" << endl;
+        Extract_max(H1);
+        Print(H1);
+        cout << "Increase Key 6 to 10" << endl;
+        Increase_key(H1, 6, 10);
+        Print(H1);
+        cout << "Extracting Max()" << endl;
+        Extract_max(H1);
+        Print(H1);
+        cout << "Increasing 3 to 8" << endl;
+        Increase_key(H1, 3, 8);
+        Print(H1);
+        cout << "Inserting 9 to 12" << endl;
+        for (int i = 9; i <= 12; i++)
+        {
+            insert(H1, i, i);
+        }
+        Print(H1);
+        cout << "Extracting Max" << endl;
+        Extract_max(H1);
+        Print(H1);
+        cout << "increasing 5 to 12" << endl;
+        Increase_key(H1, 5, 12);
+        Print(H1);
+        cout << "increasing 4 to 13" << endl;
+        Increase_key(H1, 4, 13);
+        Print(H1);
+
+        cout << "Taking input for another Heap(2)" << endl;
+        for (int i = 20; i <= 31; i++)
+        {
+            insert(H2, i, i);
+        }
+        Print(H2);
+        cout << "Extract Max H2" << endl;
+        Extract_max(H2);
+        Print(H2);
+        cout << "Melding with H1" << endl;
+        FibonacciHeap<int, int> *H3 = meld(H1, H2);
+        Print(H3);
+        cout << "Deleting 7 from heap3" << endl;
+        Delete(H3, 7);
+        Print(H3);
+        cout << "Deleting 27 from heap3" << endl;
+        Delete(H3, 27);
+        Print(H3);
+        // cout<<H3->max->key<<endl;
+        //
+        // cout << H3->max->key << endl;
+
+        //cout << "I Am Commanded To Say Nothing, To See Nothing." << endl;
+    }
 };
 
 int main()
 {
+    PriorityQueue<int, int> Q;
+    Q.test();
     // FibonacciHeap<int>* H;
     // H=make_Heap();
     // cout<<H->getN()<<endl;
-    PriorityQueue<int, int> Q;
-    FibonacciHeap<int, int> *H1 = Q.make_Heap();
-    FibonacciHeap<int, int> *H2 = Q.make_Heap();
-    int n;
-    cin >> n;
 
-    for (int i = 0; i < n; i++)
-    {
-        int key, value;
-        cin >> key >> value;
-        Q.insert(H1, key, value);
-    }
-    // Q.Print(H1);
-    // Q.PrintRootList(H1);
-    cout << "First Extract_max" << endl;
-    Q.Extract_max(H1);
-    Q.Print(H1);
     // Q.Print(H1);
     // Q.Print(H1);
     // Q.Print(H1);
     // cout<<"Max"<<H1->max->key<<endl;
     // cout<<"rootList"<<H1->rootList->key<<endl;
     // cout<<"Give up EveryThing and die"<<endl;
+    /*
     cout << "Second Extract_max" << endl;
     Q.Extract_max(H1);
     // cout<<"Dreams are messages from deep"<<endl;
@@ -477,19 +591,65 @@ int main()
     Q.Print(H1);
     cout << "Fifth Extract_max" << endl;
     Q.Extract_max(H1);
-    // cout<<"Dreams are messages from deep"<<endl;
     Q.Print(H1);
-    Q.Increase_key(H1, 30, 300);
+    cout << "Sixth" << endl;
+    Q.Extract_max(H1);
+    Q.Print(H1);
+    cout << "7Th" << endl;
+    Q.Extract_max(H1);
+    Q.Print(H1);
+    cout << "8 th" << endl;
+    Q.Extract_max(H1);
+    Q.Print(H1);
+    cout << "9 th" << endl;
+    Q.Extract_max(H1);
+    Q.Print(H1);
+    cout << "10 th" << endl;
+    Q.Extract_max(H1);
+    Q.Print(H1);
+    cout << "HWLLLL" << endl;
+    cout << "11 er" << endl;
+    Q.Extract_max(H1);
+    Q.Print(H1);
+    cout << "12 er" << endl;
+    Q.Extract_max(H1);
+    Q.Print(H1);
+    cout<<"13 er node count: "<<H1->noOfNodes-1<<endl;
+    Q.Extract_max(H1);
+    Q.Print(H1);
+    // cout<<"Dreams are messages from deep"<<endl;
+    // Q.Print(H1);
+    // Q.Increase_key(H1, 30, 300);
+    // cout<<Q.Search(H1->rootList,30)->key<<endl;
+    cout << "************Increase Key**********" << endl;
+    Q.Increase_key(H1, 4, 4000);
+    Q.Print(H1);
+    Q.Increase_key(H1,1005,5000);
+    Q.Increase_key(H1,976,5675);
+    Q.Increase_key(H1,968,10000);
 
     // cout << Q.Search(H1->rootList, 50)->key << endl;
     // Q.Decrease_key(H1, 50, 1);
     // Q.Print(H1);
-     Q.Delete(H1,20);
+     //Q.Delete(H1,22);
     // Q.Print(H1);
     //   Q.Display(H1);
+
     Q.Print(H1);
     cout << "Give up EveryThing and die" << endl;
+    cout << H1->max->key << endl;
     // cin >> n;
+    FibonacciHeap<int,int>* H=Q.meld(H1,H2);
+    Q.Extract_max(H);
+    Q.Print(H);
+    cout<<"Why this Kolaveri D::"<<endl;
+    Q.Delete(H,26);
+    cout<<"Printing after calling Delete"<<endl;
+    Q.Print(H);
+
+
+
+
 
     // for (int i = 0; i < n; i++)
     // {
@@ -503,5 +663,7 @@ int main()
     //  Q.insert(H,1,10);
     // cout << H1->getNoOfTrees() << endl;
     // cout << H1->getmax()->value << endl;
+    cout<<"I Am Commanded To Say Nothing, To See Nothing."<<endl;
+    */
     return 0;
 }

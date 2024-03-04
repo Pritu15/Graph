@@ -213,6 +213,7 @@ public:
             }
             }
         }
+        PrintAdjacencyList(ResidualGraph);
         return {max, index};
     }
     //Time Complexity: O(m * V * E)
@@ -261,9 +262,9 @@ int main()
 {
     int n, m;
     cin >> n >> m;
-    Graph<string, int> G(n, m);
+    Graph<int, int> G(n, m);
     // G.PrintAdjacencyList();
-    string src, sink;
+    int src, sink;
     cin >> src >> sink;
     // G.BFS(src, sink);
     // G.PrintPath(src, sink);

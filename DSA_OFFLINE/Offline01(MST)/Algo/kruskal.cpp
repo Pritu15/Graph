@@ -152,6 +152,12 @@ public:
 
         cout << minwt << endl;
         PrintEdge(MST);
+        cout<<"Printing Parent array"<<endl;
+        for(auto v: Parent)
+        {
+            cout<<v<<" ";
+        }
+        cout<<endl;
     }
 };
 

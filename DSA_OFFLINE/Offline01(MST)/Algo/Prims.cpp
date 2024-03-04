@@ -105,8 +105,8 @@ int main()
 {
     int n, m;
     cin >> n >> m;
-    Graph<string> G(n, m);
-    string src;
+    Graph<int> G(n, m);
+    int src;
     cin >> src;
     G.PrimsAlogrithm(src);
     // cout << "Hello" << endl;
